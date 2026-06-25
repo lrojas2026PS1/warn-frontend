@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>US Worker Layoff Notice Search | PeopleScout</title>
+  <meta name="description" content="Search WARN Act notices — mass layoffs and plant closures across the United States. Powered by PeopleScout." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ══════════════════════════════════════════
+       PEOPLESCOUT BRAND TOKENS (2024 Refresh)
+       Primary:   #2D1B69  (deep purple)
+       Secondary: #6B21A8  (vibrant purple)
+       Accent:    #06B6D4  (cyan/teal)
+       Dark:      #0F0A1E  (near-black)
+       Mid:       #1E1040  (navy purple)
+       Light:     #F5F3FF  (lavender tint)
+    ══════════════════════════════════════════ */
+    :root {
+      --ps-dark:       #0F0A1E;
+      --ps-mid:        #1E1040;
+      --ps-primary:    #2D1B69;
+      --ps-secondary:  #6B21A8;
+      --ps-purple-lt:  #9333EA;
+      --ps-cyan:       #06B6D4;
+      --ps-cyan-lt:    #22D3EE;
+      --ps-cyan-dk:    #0891B2;
+      --ps-white:      #FFFFFF;
+      --ps-off-white:  #F8F7FF;
+      --ps-lavender:   #EDE9FE;
+      --ps-grey-lt:    #E5E7EB;
+      --ps-grey-mid:   #9CA3AF;
+      --ps-grey-dk:    #4B5563;
+      --ps-text:       #111827;
+      --ps-red:        #DC2626;
+      --ps-amber:      #D97706;
+      --ps-green:      #059669;
+      --radius-sm:     6px;
+      --radius-md:     10px;
+      --radius-lg:     16px;
+      --shadow-xs:     0 1px 2px rgba(15,10,30,.06);
+      --shadow-sm:     0 2px 8px rgba(15,10,30,.10);
+      --shadow-md:     0 6px 24px rgba(15,10,30,.14);
+      --shadow-lg:     0 16px 48px rgba(15,10,30,.20);
+      --transition:    .2s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--ps-off-white);
+      color: var(--ps-text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--ps-off-white); }
+    ::-webkit-scrollbar-thumb { background: var(--ps-secondary); border-radius: 3px; }
+
+    /* ══════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════ */
+    .site-header {
+      position: sticky; top: 0; z-index: 200;
+      background: var(--ps-dark);
+      border-bottom: 1px solid rgba(106,33,168,.4);
+      backdrop-filter: blur(12px);
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 68px; gap: 16px;
+    }
+
+    /* SVG Logo */
+    .ps-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
+    .ps-logo-svg { height: 32px; width: auto; }
+    .ps-logo-divider { width: 1px; height: 28px; background: rgba(255,255,255,.2); }
+    .ps-logo-label {
+      color: rgba(255,255,255,.9);
+      font-size: 13px; font-weight: 600;
+      letter-spacing: .01em; line-height: 1.3;
+      white-space: nowrap;
+    }
+    .ps-logo-label small { display: block; font-size: 10px; font-weight: 400; color: rgba(255,255,255,.45); letter-spacing: .06em; text-transform: uppercase; }
+
+    .header-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(6,182,212,.12);
+      border: 1px solid rgba(6,182,212,.3);
+      color: var(--ps-cyan-lt);
+      font-size: 11px; font-weight: 700;
+      padding: 5px 14px; border-radius: 20px;
+      letter-spacing: .08em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--ps-cyan);
+      animation: livePulse 2s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(6,182,212,.6); }
+      50%       { opacity: .7; box-shadow: 0 0 0 5px rgba(6,182,212,0); }
+    }
+
+    /* ══════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════ */
+    .hero {
+      background: linear-gradient(135deg, var(--ps-dark) 0%, var(--ps-mid) 45%, var(--ps-primary) 100%);
+      padding: 72px 24px 96px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* geometric pattern overlay */
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(106,33,168,.25) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(6,182,212,.15) 0%, transparent 40%),
+        radial-gradient(circle at 60% 90%, rgba(45,27,105,.4) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    /* grid lines */
+    .hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(6,182,212,.1);
+      border: 1px solid rgba(6,182,212,.35);
+      color: var(--ps-cyan-lt);
+      font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      padding: 7px 18px; border-radius: 20px;
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 5.5vw, 58px);
+      font-weight: 900; line-height: 1.08;
+      color: var(--ps-white); margin-bottom: 20px;
+      letter-spacing: -.02em;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(90deg, var(--ps-cyan-lt) 0%, var(--ps-purple-lt) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 17px; font-weight: 300;
+      color: rgba(255,255,255,.65);
+      max-width: 540px; margin: 0 auto 48px;
+      line-height: 1.65;
+    }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 0;
+      flex-wrap: wrap;
+    }
+    .hero-stat {
+      padding: 0 32px;
+      border-right: 1px solid rgba(255,255,255,.12);
+      text-align: center;
+    }
+    .hero-stat:last-child { border-right: none; }
+    .hero-stat-num {
+      font-size: 32px; font-weight: 900;
+      color: var(--ps-white); line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-stat-num span { color: var(--ps-cyan-lt); }
+    .hero-stat-lbl {
+      font-size: 11px; font-weight: 600; letter-spacing: .09em;
+      text-transform: uppercase; color: rgba(255,255,255,.4);
+    }
+
+    /* ══════════════════════════════════════════
+       SEARCH CARD (floats above hero)
+    ══════════════════════════════════════════ */
+    .search-wrap {
+      max-width: 900px; margin: -52px auto 40px;
+      padding: 0 20px;
+      position: relative; z-index: 50;
+    }
+    .search-card {
+      background: var(--ps-white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(106,33,168,.12);
+      overflow: hidden;
+    }
+    .search-card-top {
+      background: linear-gradient(90deg, var(--ps-primary), var(--ps-secondary));
+      padding: 14px 24px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .search-card-top h2 {
+      color: #fff; font-size: 14px; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+    .search-card-top svg { color: rgba(255,255,255,.75); flex-shrink: 0; }
+    .search-body { padding: 28px 28px 24px; }
+
+    .field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+    @media (max-width: 640px) {
+      .field-row-2, .field-row-3 { grid-template-columns: 1fr; }
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--ps-grey-dk);
+      margin-bottom: 7px;
+    }
+    .field label .lbl-accent { color: var(--ps-secondary); }
+    .field input, .field select {
+      width: 100%; padding: 11px 15px;
+      border: 1.5px solid var(--ps-grey-lt);
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 500;
+      color: var(--ps-text); background: #fff;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+      appearance: none; -webkit-appearance: none;
+    }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239CA3AF' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .field input::placeholder { color: var(--ps-grey-mid); font-weight: 400; }
+    .field input:focus, .field select:focus {
+      border-color: var(--ps-secondary);
+      box-shadow: 0 0 0 3px rgba(106,33,168,.1);
+      background: #fdfcff;
+    }
+
+    /* Radius slider */
+    .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .slider-header label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ps-grey-dk); }
+    .slider-badge {
+      font-size: 12px; font-weight: 800;
+      color: var(--ps-secondary);
+      background: var(--ps-lavender);
+      padding: 2px 10px; border-radius: 12px;
+      border: 1px solid rgba(106,33,168,.2);
+    }
+    input[type="range"] {
+      width: 100%; height: 5px;
+      -webkit-appearance: none; appearance: none;
+      border-radius: 3px; outline: none; cursor: pointer;
+      background: linear-gradient(to right, var(--ps-secondary) 0%, var(--ps-secondary) var(--pct,21%), var(--ps-grey-lt) var(--pct,21%), var(--ps-grey-lt) 100%);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--ps-secondary);
+      border: 3px solid #fff; box-shadow: 0 0 0 1.5px var(--ps-secondary), var(--shadow-sm);
+      cursor: pointer; transition: transform var(--transition);
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--ps-secondary); border: 3px solid #fff; cursor: pointer;
+    }
+    .slider-ticks { display: flex; justify-content: space-between; margin-top: 5px; }
+    .slider-ticks span { font-size: 10px; font-weight: 500; color: var(--ps-grey-mid); }
+
+    /* Search footer */
+    .search-actions {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      padding-top: 20px; border-top: 1px solid var(--ps-grey-lt);
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: linear-gradient(135deg, var(--ps-secondary), var(--ps-primary));
+      color: #fff; border: none; border-radius: var(--radius-sm);
+      padding: 13px 30px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(106,33,168,.35);
+      transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+    .btn-primary:hover:not(:disabled) {
+      opacity: .92; transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(106,33,168,.4);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .error-msg {
+      display: none; align-items: center; gap: 8px;
+      color: var(--ps-red); font-size: 13px; font-weight: 600;
+    }
+    .error-msg.show { display: flex; }
+
+    /* ══════════════════════════════════════════
+       MAIN CONTENT
+    ══════════════════════════════════════════ */
+    .main { max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+
+    /* ── results header ── */
+    .results-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      margin-bottom: 24px;
+    }
+    .results-bar h2 { font-size: 20px; font-weight: 800; color: var(--ps-text); }
+    .results-bar p  { font-size: 12px; color: var(--ps-grey-mid); margin-top: 2px; font-weight: 500; }
+    .count-chip {
+      background: var(--ps-lavender); color: var(--ps-secondary);
+      font-size: 13px; font-weight: 800;
+      padding: 6px 18px; border-radius: 20px;
+      border: 1px solid rgba(106,33,168,.2);
+    }
+
+    /* ── notice cards ── */
+    .notice-card {
+      background: var(--ps-white);
+      border: 1px solid var(--ps-grey-lt);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-xs);
+      margin-bottom: 14px;
+      overflow: hidden;
+      opacity: 0;
+      animation: cardIn .4s ease forwards;
+      transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+    }
+    .notice-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: rgba(106,33,168,.22);
+      transform: translateY(-2px);
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-stripe { height: 4px; background: linear-gradient(90deg, var(--ps-secondary), var(--ps-cyan)); }
+    .card-main { padding: 22px 26px 20px; }
+
+    /* header row */
+    .card-header-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px;
+      margin-bottom: 4px;
+    }
+    .card-company { font-size: 17px; font-weight: 800; color: var(--ps-primary); line-height: 1.25; flex: 1; }
+    .card-location { font-size: 13px; color: var(--ps-grey-mid); font-weight: 400; margin-bottom: 16px; display: flex; align-items: center; gap: 5px; }
+
+    /* badges */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .badge-closing { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+    .badge-layoff  { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .badge-both    { background: var(--ps-lavender); color: #4C1D95; border: 1px solid rgba(106,33,168,.25); }
+    .badge-unknown { background: var(--ps-grey-lt); color: var(--ps-grey-dk); border: 1px solid #D1D5DB; }
+
+    /* stat pills */
+    .stat-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--ps-off-white); border: 1px solid var(--ps-grey-lt);
+      border-radius: 6px; padding: 6px 12px;
+      font-size: 12px; font-weight: 600; color: var(--ps-grey-dk);
+      white-space: nowrap;
+    }
+    .pill svg { opacity: .55; flex-shrink: 0; }
+    .pill-highlight { background: var(--ps-lavender); border-color: rgba(106,33,168,.2); color: var(--ps-secondary); }
+    .pill-cyan { background: #ECFEFF; border-color: rgba(6,182,212,.25); color: var(--ps-cyan-dk); }
+
+    /* ── notes ── */
+    .notes-box {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-left: 3px solid var(--ps-amber);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px; margin-bottom: 14px;
+      font-size: 13px; color: #78350F; line-height: 1.6;
+    }
+
+    /* ── contact ── */
+    .contact-block { margin-bottom: 14px; }
+    .section-label {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--ps-grey-mid);
+      margin-bottom: 8px;
+    }
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+    .contact-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 500; color: var(--ps-grey-dk);
+    }
+    .contact-icon {
+      width: 30px; height: 30px; border-radius: 7px;
+      background: var(--ps-lavender); color: var(--ps-secondary);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-item a { color: var(--ps-secondary); text-decoration: none; }
+    .contact-item a:hover { text-decoration: underline; }
+
+    /* ── card footer ── */
+    .card-footer {
+      padding: 14px 26px 16px;
+      border-top: 1px solid var(--ps-grey-lt);
+      background: var(--ps-off-white);
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .link-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px; border-radius: 6px;
+      font-size: 12px; font-weight: 700; letter-spacing: .02em;
+      text-decoration: none;
+      border: 1.5px solid; cursor: pointer;
+      transition: background var(--transition), color var(--transition), border-color var(--transition);
+    }
+    .link-primary { border-color: var(--ps-secondary); color: var(--ps-secondary); background: #fff; }
+    .link-primary:hover { background: var(--ps-secondary); color: #fff; }
+    .link-news { border-color: var(--ps-grey-lt); color: var(--ps-grey-dk); background: #fff; }
+    .link-news:hover { border-color: var(--ps-primary); color: var(--ps-primary); }
+
+    /* ══════════════════════════════════════════
+       LOADER / EMPTY STATES
+    ══════════════════════════════════════════ */
+    .state-wrap { text-align: center; padding: 72px 20px; }
+    .state-icon-wrap {
+      width: 80px; height: 80px; border-radius: 20px; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center; font-size: 36px;
+      background: var(--ps-lavender);
+    }
+    .state-wrap h3 { font-size: 20px; font-weight: 800; color: var(--ps-primary); margin-bottom: 8px; }
+    .state-wrap p  { font-size: 14px; color: var(--ps-grey-mid); max-width: 440px; margin: 0 auto; line-height: 1.7; }
+
+    .loader { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 72px 20px; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--ps-grey-lt); border-top-color: var(--ps-secondary);
+      border-radius: 50%; animation: spin .75s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text h3 { font-size: 17px; font-weight: 700; color: var(--ps-primary); margin-bottom: 4px; }
+    .loader-text p  { font-size: 13px; color: var(--ps-grey-mid); }
+
+    /* ══════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════ */
+    .site-footer {
+      background: var(--ps-dark);
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .footer-logo { margin-bottom: 12px; display: flex; justify-content: center; }
+    .site-footer p { font-size: 12px; color: rgba(255,255,255,.35); line-height: 1.8; max-width: 600px; margin: 0 auto; }
+    .site-footer a { color: rgba(255,255,255,.5); text-decoration: none; }
+    .site-footer a:hover { color: var(--ps-cyan-lt); }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 640px) {
+      .hero { padding: 52px 20px 80px; }
+      .hero-stat { padding: 0 18px; }
+      .hero-stat-num { font-size: 24px; }
+      .search-body { padding: 20px 18px 18px; }
+      .card-main { padding: 18px 18px 16px; }
+      .card-footer { padding: 12px 18px; }
+      .ps-logo-label { display: none; }
+      .ps-logo-divider { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════
+     HEADER
+════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+
+    <!-- PeopleScout SVG Logo (inline, white version) -->
+    <a href="https://www.peoplescout.com" target="_blank" rel="noopener" class="ps-logo" title="PeopleScout">
+      <svg class="ps-logo-svg" viewBox="0 0 200 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="PeopleScout">
+        <!-- "People" wordmark simplified mark + text -->
+        <!-- Icon: stylised connected-people mark -->
+        <circle cx="10" cy="14" r="5.5" fill="#06B6D4"/>
+        <circle cx="24" cy="14" r="5.5" fill="#9333EA"/>
+        <path d="M2 34c0-4.418 3.582-8 8-8h12c4.418 0 8 3.582 8 8" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <!-- Wordmark -->
+        <text x="42" y="30" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="22" fill="#FFFFFF" letter-spacing="-0.5">People</text>
+        <text x="138" y="30" font-family="Inter,Arial,sans-serif" font-weight="300" font-size="22" fill="#9333EA" letter-spacing="-0.5">Scout</text>
+      </svg>
+      <div class="ps-logo-divider"></div>
+      <div class="ps-logo-label">
+        WARN Notice Search
+        <small>Connect More™ Platform</small>
+      </div>
+    </a>
+
+    <div class="header-pill">
+      <span class="live-dot"></span>
+      Live Database
+    </div>
+
+  </div>
+</header>
+
+<!-- ════════════════════════════════
+     HERO
+════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="live-dot"></span>
+      Worker Adjustment &amp; Retraining Notification Act
+    </div>
+    <h1>
+      United States<br/>
+      <span class="gradient-text">Worker Layoff Notice Search</span>
+    </h1>
+    <p class="hero-sub">
+      Search official WARN Act filings from state labor departments and federal records
+      to track mass layoffs and plant closures across all 50 states.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num"><span>60</span></div>
+        <div class="hero-stat-lbl">Days Notice Required</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num"><span>100</span>+</div>
+        <div class="hero-stat-lbl">Employee Threshold</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num"><span>50</span></div>
+        <div class="hero-stat-lbl">States Tracked</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════
+     SEARCH CARD
+════════════════════════════════ -->
+<div class="search-wrap">
+  <div class="search-card">
+    <div class="search-card-top">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <h2>Search WARN Notices</h2>
+    </div>
+    <div class="search-body">
+
+      <div class="field-row-2">
+        <div class="field">
+          <label>City <span class="lbl-accent">*</span></label>
+          <input type="text" id="inp-city" placeholder="e.g. Detroit" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>State <span class="lbl-accent">*</span></label>
+          <select id="inp-state">
+            <option value="">Select a state…</option>
+            <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option>
+            <option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option>
+            <option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option>
+            <option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option>
+            <option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option>
+            <option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
+            <option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option>
+            <option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option>
+            <option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
+            <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option>
+            <option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option>
+            <option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option>
+            <option>Wisconsin</option><option>Wyoming</option><option>District of Columbia</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row-3">
+        <div class="field">
+          <label>Industry</label>
+          <select id="inp-industry">
+            <option>All Industries</option>
+            <option>Manufacturing</option>
+            <option>Retail Trade</option>
+            <option>Healthcare &amp; Social Assistance</option>
+            <option>Finance &amp; Insurance</option>
+            <option>Information Technology</option>
+            <option>Transportation &amp; Warehousing</option>
+            <option>Construction</option>
+            <option>Food Service &amp; Hospitality</option>
+            <option>Education</option>
+            <option>Professional &amp; Business Services</option>
+            <option>Government</option>
+            <option>Energy &amp; Utilities</option>
+            <option>Telecommunications</option>
+            <option>Automotive</option>
+            <option>Aerospace &amp; Defense</option>
+            <option>Real Estate</option>
+            <option>Agriculture</option>
+            <option>Mining</option>
+            <option>Media &amp; Entertainment</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column: span 2;">
+          <div class="slider-header">
+            <label>Search Radius</label>
+            <span class="slider-badge" id="radius-display">25 miles</span>
+          </div>
+          <input type="range" id="inp-radius" min="5" max="100" step="5" value="25" style="--pct:21.05%;" />
+          <div class="slider-ticks">
+            <span>5 mi</span><span>25 mi</span><span>50 mi</span><span>75 mi</span><span>100 mi</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-actions">
+        <div class="error-msg" id="err-msg">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="err-text"></span>
+        </div>
+        <button class="btn-primary" id="search-btn" onclick="runSearch()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          Search WARN Notices
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     RESULTS AREA
+════════════════════════════════ -->
+<main class="main" id="results-area">
+  <div class="state-wrap">
+    <div class="state-icon-wrap">📋</div>
+    <h3>Ready to search</h3>
+    <p>Enter a city and state above to find WARN Act notices in your area. The WARN Act requires employers with 100+ employees to provide 60 days advance notice of mass layoffs or facility closures.</p>
+  </div>
+</main>
+
+<!-- ════════════════════════════════
+     FOOTER
+════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-logo">
+    <svg viewBox="0 0 180 36" width="140" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="9" cy="12" r="4.5" fill="#06B6D4"/>
+      <circle cx="21" cy="12" r="4.5" fill="#9333EA"/>
+      <path d="M2 28c0-3.866 3.134-7 7-7h10c3.866 0 7 3.134 7 7" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <text x="36" y="25" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="18" fill="rgba(255,255,255,.7)">People</text>
+      <text x="116" y="25" font-family="Inter,Arial,sans-serif" font-weight="300" font-size="18" fill="#9333EA">Scout</text>
+    </svg>
+  </div>
+  <p>
+    WARN notices are sourced from state labor departments, the U.S. Department of Labor, and public records.
+    Always verify directly with official sources. This tool is for informational purposes only.<br/>
+    &copy; 2025 PeopleScout, a TrueBlue company.
+    <a href="https://www.peoplescout.com" target="_blank">peoplescout.com</a>
+  </p>
+</footer>
+
+<!-- ════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  var BACKEND_URL = 'https://warn-backend.vercel.app/';
+
+  /* ── Slider ── */
+  const radiusInput   = document.getElementById('inp-radius');
+  const radiusDisplay = document.getElementById('radius-display');
+
+  function updateSlider() {
+    const v   = Number(radiusInput.value);
+    const pct = (((v - 5) / 95) * 100).toFixed(2) + '%';
+    radiusInput.style.setProperty('--pct', pct);
+    radiusDisplay.textContent = v + ' miles';
+  }
+  radiusInput.addEventListener('input', updateSlider);
+
+  /* ── Enter key ── */
+  document.getElementById('inp-city').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') runSearch();
+  });
+
+  /* ── Helpers ── */
+  function showErr(msg) {
+    const el = document.getElementById('err-msg');
+    const tx = document.getElementById('err-text');
+    tx.textContent = msg || '';
+    el.classList.toggle('show', !!msg);
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('search-btn');
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" style="animation:spin .75s linear infinite;transform-origin:center"/></svg> Searching…'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Search WARN Notices';
+  }
+
+  /* ── SVG icons ── */
+  function icon(d, s) {
+    s = s || 14;
+    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+  }
+  var IC = {
+    users:     '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    cal:       '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    bldg:      '<rect x="2" y="3" width="20" height="18"/><path d="M9 21V9h6v12M9 9h6"/>',
+    pin:       '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+    phone:     '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.89 12a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 3.9 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    mail:      '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+    link:      '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+    briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    union:     '<circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/>'
+  };
+
+  function getBadgeClass(type) {
+    if (!type) return 'badge-unknown';
+    var t = type.toLowerCase();
+    if (t.includes('both'))  return 'badge-both';
+    if (t.includes('clos'))  return 'badge-closing';
+    return 'badge-layoff';
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Render a single notice card ── */
+  function renderCard(n, idx) {
+    var bc   = getBadgeClass(n.type);
+    var addr = [n.address, n.city, n.state, n.zip].filter(Boolean).join(', ');
+    var delay = (idx * 0.065).toFixed(3);
+
+    /* Stat pills */
+    var pills = '';
+    if (n.affectedWorkers) pills += '<span class="pill pill-highlight">' + icon(IC.users) + ' ' + Number(n.affectedWorkers).toLocaleString() + ' Workers Affected</span>';
+    if (n.layoffDate)      pills += '<span class="pill">' + icon(IC.cal) + ' Effective: ' + esc(n.layoffDate) + '</span>';
+    if (n.noticeDate)      pills += '<span class="pill">' + icon(IC.cal) + ' Filed: ' + esc(n.noticeDate) + '</span>';
+    if (n.industry)        pills += '<span class="pill">' + icon(IC.bldg) + ' ' + esc(n.industry) + '</span>';
+    if (n.union)           pills += '<span class="pill pill-cyan">' + icon(IC.union) + ' ' + esc(n.union) + '</span>';
+
+    /* Notes */
+    var notesHTML = n.notes ? '<div class="notes-box">ℹ️ ' + esc(n.notes) + '</div>' : '';
+
+    /* Contact */
+    var contactHTML = '';
+    if (n.contactName || n.contactPhone || n.contactEmail) {
+      var items = '';
+      if (n.contactName)  items += '<div class="contact-item"><div class="contact-icon">' + icon(IC.users, 14) + '</div>' + esc(n.contactName) + '</div>';
+      if (n.contactPhone) items += '<div class="contact-item"><div class="contact-icon">' + icon(IC.phone, 14) + '</div>' + esc(n.contactPhone) + '</div>';
+      if (n.contactEmail) items += '<div class="contact-item"><div class="contact-icon">' + icon(IC.mail, 14) + '</div><a href="mailto:' + esc(n.contactEmail) + '">' + esc(n.contactEmail) + '</a></div>';
+      contactHTML = '<div class="contact-block"><div class="section-label">Contact Information</div><div class="contact-grid">' + items + '</div></div>';
+    }
+
+    /* Links */
+    var linkBtns = '';
+    if (n.sourceUrl && n.sourceUrl !== 'null') linkBtns += '<a href="' + esc(n.sourceUrl) + '" target="_blank" rel="noopener noreferrer" class="link-btn link-primary">' + icon(IC.link, 13) + ' Official Notice</a>';
+    if (n.newsUrl   && n.newsUrl   !== 'null') linkBtns += '<a href="' + esc(n.newsUrl)   + '" target="_blank" rel="noopener noreferrer" class="link-btn link-news">'   + icon(IC.link, 13) + ' News Coverage</a>';
+    var footerHTML = linkBtns ? '<div class="card-footer">' + linkBtns + '</div>' : '';
+
+    return '<div class="notice-card" style="animation-delay:' + delay + 's">'
+      + '<div class="card-stripe"></div>'
+      + '<div class="card-main">'
+        + '<div class="card-header-row">'
+          + '<div class="card-company">' + esc(n.company || 'Unknown Company') + '</div>'
+          + (n.type ? '<span class="badge ' + bc + '">' + esc(n.type) + '</span>' : '')
+        + '</div>'
+        + (addr ? '<div class="card-location">' + icon(IC.pin, 13) + ' ' + esc(addr) + '</div>' : '')
+        + '<div class="stat-pills">' + pills + '</div>'
+        + notesHTML
+        + contactHTML
+      + '</div>'
+      + footerHTML
+    + '</div>';
+  }
+
+  /* ── Main search function ── */
+  window.runSearch = function () {
+    var city     = document.getElementById('inp-city').value.trim();
+    var state    = document.getElementById('inp-state').value;
+    var industry = document.getElementById('inp-industry').value;
+    var radius   = document.getElementById('inp-radius').value;
+
+    showErr('');
+    if (!city)  { showErr('Please enter a city name.'); return; }
+    if (!state) { showErr('Please select a state.'); return; }
+
+    setLoading(true);
+    document.getElementById('results-area').innerHTML =
+      '<div class="loader">'
+      + '<div class="spinner"></div>'
+      + '<div class="loader-text"><h3>Searching WARN databases…</h3><p>Querying state labor departments &amp; federal records</p></div>'
+      + '</div>';
+
+    fetch(BACKEND_URL + '/api/search/warn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        city: city,
+        state: state,
+        industry: industry,
+        radius: parseInt(radius)
+      })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+      setLoading(false);
+
+      if (!data.success || !data.results || data.results.length === 0) {
+        document.getElementById('results-area').innerHTML =
+          '<div class="state-wrap"><div class="state-icon-wrap">🔍</div>'
+          + '<h3>No results found</h3>'
+          + '<p>No WARN Act notices were found matching your search. Try expanding the search radius, changing the industry, or searching a nearby city.</p>'
+          + '</div>';
+        return;
+      }
+
+      var ts = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+      var industryLabel = industry !== 'All Industries' ? ' &middot; ' + industry : '';
+
+      var html = '<div class="results-bar">'
+        + '<div><h2>' + data.results.length + ' WARN Notice' + (data.results.length !== 1 ? 's' : '') + ' Found</h2>'
+        + '<p>Near ' + esc(city) + ', ' + esc(state) + ' &middot; ' + radius + '-mile radius' + industryLabel + ' &middot; ' + ts + '</p></div>'
+        + '<span class="count-chip">' + data.results.length + ' Result' + (data.results.length !== 1 ? 's' : '') + '</span>'
+        + '</div>';
+
+      data.results.forEach(function(n, i) {
+        html += renderCard(n, i);
+      });
+
+      html += '<p style="text-align:center;font-size:11px;color:var(--ps-grey-mid);margin-top:28px;padding-bottom:4px;">'
+        + 'Data sourced from state labor departments and federal records. Verify all notices with official sources before acting.'
+        + '</p>';
+
+      document.getElementById('results-area').innerHTML = html;
+
+    })
+    .catch(function(error) {
+      setLoading(false);
+      console.error('Search error:', error);
+      document.getElementById('results-area').innerHTML =
+        '<div class="state-wrap"><div class="state-icon-wrap">⚠️</div>'
+        + '<h3>Search failed</h3>'
+        + '<p>An error occurred while fetching results: ' + esc(error.message) + '. Please check your connection and try again.</p>'
+        + '</div>';
+    });
+  };
+
+})();
+</script>
+
+</body>
+</html>
